@@ -386,6 +386,8 @@ const Home: React.FC = () => {
   }, [profile, servicesApiKey]);
 
   const getCurrentLocation = () => {
+    setLocationLoading(true);
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -393,32 +395,41 @@ const Home: React.FC = () => {
           const lng = position.coords.longitude;
           setUserLocation({ lat, lng });
 
-          // Use Goong reverse geocoding to get detailed address
           if (servicesApiKey) {
             try {
               const response = await fetch(
                 `https://rsapi.goong.io/Geocode?latlng=${lat},${lng}&api_key=${servicesApiKey}`
               );
-              const data = await response.json();
 
-              if (data && data.results && data.results.length > 0) {
+              if (response.ok) {
+                const data = await response.json();
                 const address = data.results[0].formatted_address;
                 setCurrentLocation(address);
-                console.log("Detailed address from Goong:", address);
+                if (process.env.NODE_ENV === "development") {
+                  console.log("Detailed address from Goong:", address);
+                }
               } else {
-                console.log("No address found from Goong API");
+                if (process.env.NODE_ENV === "development") {
+                  console.log("No address found from Goong API");
+                }
               }
             } catch (error) {
-              console.error("Error getting address from Goong:", error);
+              if (process.env.NODE_ENV === "development") {
+                console.error("Error getting address from Goong:", error);
+              }
             }
           } else {
-            console.log("Goong API key not available yet");
+            if (process.env.NODE_ENV === "development") {
+              console.log("Goong API key not available yet");
+            }
           }
 
           setLocationLoading(false);
         },
         (error) => {
-          console.error("Error getting location:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error getting location:", error);
+          }
           setLocationLoading(false);
         }
       );
@@ -545,7 +556,9 @@ const Home: React.FC = () => {
         .select();
 
       if (error) {
-        console.error("Error creating SOS request:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error creating SOS request:", error);
+        }
         toast.dismiss();
         toast.error(`${t("sos.cannot_send")}: ${error.message}`);
         return;
@@ -566,7 +579,9 @@ const Home: React.FC = () => {
 
       navigate("/map");
     } catch (error) {
-      console.error("Unexpected error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Unexpected error:", error);
+      }
       toast.dismiss();
       toast.error(t("sos.unexpected_error"));
     }
@@ -628,19 +643,35 @@ const Home: React.FC = () => {
                 )}
               </div>
               {/* Logo */}
-              <div className="flex-shrink-0">
-                {/* Logo cho chế độ sáng */}
-                <img
-                  src="/bolttag/black_circle_360x360.png"
-                  alt="SafeConnect Logo"
-                  className="w-20 h-20 dark:hidden"
-                />
-                {/* Logo cho chế độ tối */}
-                <img
-                  src="/bolttag/white_circle_360x360.png"
-                  alt="SafeConnect Logo"
-                  className="w-20 h-20 hidden dark:block"
-                />
+              <div className="flex-shrink-0 flex flex-col items-center">
+                <a
+                  href="https://bolt.new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:scale-105 transition-transform duration-200"
+                >
+                  {/* Logo cho chế độ sáng */}
+                  <img
+                    src="/bolttag/black_circle_360x360.png"
+                    alt="SafeConnect Logo - Powered by Bolt.new"
+                    className="w-20 h-20 dark:hidden cursor-pointer"
+                  />
+                  {/* Logo cho chế độ tối */}
+                  <img
+                    src="/bolttag/white_circle_360x360.png"
+                    alt="SafeConnect Logo - Powered by Bolt.new"
+                    className="w-20 h-20 hidden dark:block cursor-pointer"
+                  />
+                </a>
+                {/* Powered by Bolt.new link */}
+                <a
+                  href="https://bolt.new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                >
+                  Powered by Bolt.new
+                </a>
               </div>
             </div>
           </div>
